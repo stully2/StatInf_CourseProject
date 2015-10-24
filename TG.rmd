@@ -1,0 +1,157 @@
+---
+title: "Effects of Vitamin C on Tooth Growth in Guinea Pigs"
+author: "Sean Tully - 10/23/2015"
+output: pdf_document
+fontsize: 6pt
+geometry: margin=0.5in
+---
+
+# Overview #
+
+The aim of this paper is to determine how vitamin C affects the overall tooth length in a randomized guinea pig population. Within the report the effects of delivery (supplement) and dosage will be reviewed.
+
+## Data ##
+
+The data for this analysis can be found in the r datasets library under ToothGrowth. Once loaded, the data can be parsed for easier calculation. [Code 1](#c01)
+
+* 2 groups for supplement
+* 3 groups for each combination of dosage pairs
+
+``` {r, echo=FALSE}
+library(datasets)
+library(lattice)
+
+data("ToothGrowth")
+tg <- ToothGrowth
+rm(ToothGrowth)
+oj <- subset(tg, supp=="OJ")
+vc <- subset(tg, supp=="VC")
+d12 <- subset(tg, dose %in% c(0.5, 1.0))
+d23 <- subset(tg, dose %in% c(1.0, 2.0))
+d13 <- subset(tg, dose %in% c(0.5, 2.0))
+```
+
+A quick summary of the ToothGrowth data set reveals a collection of two distinct groups of sample data based on the type of supplement used. Both these groups indicate a general increase in guinea pig tooth length as the supplement dosage increase. [Code 2](#c02)
+
+``` {r, echo=FALSE, fig.width=8, fig.height = 4}
+xyplot(tg$len ~ tg$dose | tg$supp,xlab = "Dose",ylab = "Tooth Length", panel = function(x,y,...) {
+    panel.xyplot(x,y,...)
+    panel.lmline(x,y,col=1,lwd=2)
+  })
+    
+```
+
+## Tooth Growth Analysis ##
+
+For the purposes of this analysis the interest is whether there is a significant difference between dosage amounts or supplement type. For each, confidence intervals will be calculated to numerically view if the null hypothesis can be rejected.
+
+### Suppliment: ###
+
+Looking only at which supplement was used to deliver vitamin C to the guinea pigs the confidence interval indicates that there is not a significant difference between methods. [Code 3](#c03)
+
+``` {r, echo=FALSE}
+library(knitr)
+suppCI <- cbind(data.frame("Comparisons"=c("Suppliment")),rbind(
+  t.test(len ~ supp, paired = FALSE, var.equal = FALSE, data = tg)$conf
+)
+)
+names(suppCI) <- c("Comparisons","Lower Limit","Upper Limit")
+kable(suppCI,digits=3)
+```
+
+### Dosage: ###
+
+Ignoring the delivery system (Supplement) the effectiveness can be analyzed by comparing the effectiveness of each group by the others. [Code 4](#c04)
+
+* Group1: Dose 0.5 vs 1.0
+* Group1: Dose 1.0 vs 2.0
+* Group1: Dose 0.5 vs 2.0
+
+``` {r, echo=FALSE}
+library(knitr)
+doseCI <- cbind(data.frame("Comparisons"=c("Dose 1-2","Dose 2-3","Dose 1-3")),rbind(
+  t.test(len ~ dose, paired = FALSE, var.equal = FALSE, data = d12)$conf,
+  t.test(len ~ dose, paired = FALSE, var.equal = FALSE, data = d23)$conf,
+  t.test(len ~ dose, paired = FALSE, var.equal = FALSE, data = d13)$conf
+)
+)
+names(doseCI) <- c("Comparisons","Lower Limit","Upper Limit")
+kable(doseCI,digits=3)
+```
+
+Here with in each coupling there is a significant difference between lower dosages and higher ones indicated by the confidence interval residing wholly in the negative region.
+
+## Conclusions ##
+
+* There is no distinctive difference between supplement provided the subjects
+* Dosage level increase leads to a significant increase in tooth length
+
+## Assumptions ##
+
+* A random sampling of physically similar guinea pigs were used
+* Measurements were taken from independent populations (unpaired)
+* The variance between each test group is different
+
+\pagebreak
+
+# Appendix: 
+
+##### c01 
+
+Import and Parse Dataset:
+
+``` {r, eval=FALSE}
+          library(datasets)
+          library(lattice)
+          
+          data("ToothGrowth")
+          tg <- ToothGrowth
+          rm(ToothGrowth)
+          oj <- subset(tg, supp=="OJ")
+          vc <- subset(tg, supp=="VC")
+          d12 <- subset(tg, dose %in% c(0.5, 1.0))
+          d23 <- subset(tg, dose %in% c(1.0, 2.0))
+          d13 <- subset(tg, dose %in% c(0.5, 2.0))
+```
+
+##### c02 
+
+Exploritory lattice:
+
+``` {r, eval=FALSE}
+          xyplot(tg$len ~ tg$dose | tg$supp,xlab = "Dose",ylab = "Tooth Length", panel = function(x,y,...) {
+              panel.xyplot(x,y,...)
+              panel.lmline(x,y,col=1,lwd=2)
+            })
+```
+
+##### c03 
+
+Tabulate confidence intervals (Supplement):
+
+``` {r, eval=FALSE}
+          library(knitr)
+          suppCI <- cbind(data.frame("Comparisons"=c("Suppliment")),rbind(
+            t.test(len ~ supp, paired = FALSE, var.equal = FALSE, data = tg)$conf
+          )
+          )
+          names(suppCI) <- c("Comparisons","Lower Limit","Upper Limit")
+          kable(suppCI,digits=3)
+```
+
+##### c04 
+
+Tabulate confidence intervals (Dosage):
+
+``` {r, eval=FALSE}
+          library(knitr)
+          doseCI <- cbind(data.frame("Comparisons"=c("Dose 1-2","Dose 2-3","Dose 1-3")),rbind(
+            t.test(len ~ dose, paired = FALSE, var.equal = FALSE, data = d12)$conf,
+            t.test(len ~ dose, paired = FALSE, var.equal = FALSE, data = d23)$conf,
+            t.test(len ~ dose, paired = FALSE, var.equal = FALSE, data = d13)$conf
+          )
+          )
+          names(doseCI) <- c("Comparisons","Lower Limit","Upper Limit")
+          kable(doseCI,digits=3)
+```
+
